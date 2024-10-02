@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neighborhood Map</title>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDSQwC16g8ZKoyVC2EpixPr0e-7IcPII14&libraries=places&callback=initMap" async defer></script>
+    <style>
+      body {
+  font-family: 'Your Website Font', sans-serif;
+}
+
+      #map {
+        height: 80vh;
+        width: 100%; /* Default to 100% width */
+        transition: width 0.3s; /* Smooth transition when resizing */
+      }
+      #sidebar {
+        height: 100%;
+        width: 30%;
+        position: fixed;
+        right: 0;
+        top: 0;
+        background-color: #f8f9fa;
+        box-shadow: -2px 0 5px rgba(0, 0, 0, 0.2);
+        padding: 20px;
+        display: none;
+        z-index: 1000;
+        transition: transform 0.3s ease; /* Smooth transition for sidebar */
+      }
+      .share{
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 10px;
+        z-index: 9999999;
+      }
+      #sidebar h3 {
+        margin-top: 0;
+      }
+      #close-sidebar {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background-color: #d9534f;
+        color: white;
+        border: none;
+        padding: 5px 10px;
+        cursor: pointer;
+        border-radius: 5px;
+      }
+      #search-input {
+        width: 300px;
+        height: 30px;
+        margin-right: 10px;
+        padding: 5px;
+        font-size: 16px;
+        margin-top: 35px;
+      }
+      .whatsapp-share-btn {
+        display: inline-block;
+        background-color: #25D366;
+        color: white;
+        padding: 13px 15px;
+        font-size: 16px;
+        text-decoration: none;
+        border-radius: 5px;
+        margin-top: 35px;
+      }
+      .whatsapp-share-btn:hover {
+        background-color: #20b858;
+      }
+      .info-header{
+        font-size: 25px;
+        margin-bottom: 10px;
+      }
+      .info-content {
+        font-size: 17px;
+        padding: 10px;
+      }
+      .whatsapp-share-btn{
+     z-index: 99999;
+     margin-left: 50px;
+      }
+
+      
+      @media (max-width: 768px) {
+  #sidebar {
+    width: 100%; /* Full width on mobile */
+  }
+  #map {
+    height: 60vh; /* Adjust map height on smaller screens */
+  }
+  .whatsapp-share-btn {
+    font-size: 14px; /* Adjust button size */
+  }
+}
+
+    </style>
+  </head>
+  <body>
+
+    <!-- Search input and WhatsApp button container -->
+    <div id="controls" class="share">
+      <input id="search-input" type="text" placeholder="Search for a city or country" />
+      <a id="share-btn-sidebar" href="#" target="_blank" class="whatsapp-share-btn">Share on WhatsApp</a>
+    </div>
+
+    <!-- Div to display the map -->
+    <div id="map"></div>
+
+    <!-- Sidebar to show location details -->
+    <div id="sidebar">
+      <button id="close-sidebar">X</button>
+      <h3 id="location-name" class="info-header"></h3>
+      <div class="info-content">
+        <p><strong>Location:</strong> <span id="location-details"></span></p>
+        <a id="location-link" href="https://jed6.matajeralhai.com/" target="_blank">Visit website</a>
+        <br><br>
+
+
+        <img id="location-image" src="" alt="Location image" style="width:100%; height:auto;">
+      </div>
+    </div>
+
+    <script>
+      let map, searchBox;
+      let markers = [];  // Array to hold all markers
+      let currentLocation; // Store the current location to share on WhatsApp
+
+      // Array of locations to display on the map
+      const locations = [
+      { lat: 21.2854, lng: 39.2376, name: 'حي السنابل - جدة', link: 'https://jed1.matajeralhai.com/', icon: 'https://maps.google.com/mapfiles/ms/icons/orange-dot.png', image: 'https://jed1.matajeralhai.com/Images/Photos/63f719b49e404dbb9a7217ded02fef23.webp' },
+            { lat: 21.2854, lng: 39.2376, name: 'حي الأجاويد - جدة', link: 'https://jed1.matajeralhai.com/', icon: 'https://maps.google.com/mapfiles/ms/icons/orange-dot.png', image: 'url_to_image2' },
+            { lat: 21.5433, lng: 39.1728, name: 'حي الرياض - جدة', link: 'https://jed6.matajeralhai.com/', icon: 'https://maps.google.com/mapfiles/ms/icons/orange-dot.png', image: 'url_to_image3' },
+            { lat: 21.5433, lng: 39.1728, name: 'حي طيبة - جدة', link: 'https://jed6.matajeralhai.com/', icon: 'https://maps.google.com/mapfiles/ms/icons/orange-dot.png', image: 'url_to_image4' },
+            { lat: 21.6682, lng: 39.1091, name: 'حي أبحر - جدة', link: 'https://jed6.matajeralhai.com/', icon: 'https://maps.google.com/mapfiles/ms/icons/orange-dot.png', image: 'url_to_image5' },
+            { lat: 21.5454, lng: 39.2049, name: 'حي الحمدانية - جدة', link: 'https://jed4.matajeralhai.com/', icon: 'https://maps.google.com/mapfiles/ms/icons/orange-dot.png', image: 'url_to_image6' },
+            { lat: 21.5027, lng: 39.2433, name: 'حي الفضيلة - جدة', link: 'https://jed5.matajeralhai.com/', icon: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png', image: 'url_to_image7' },
+            { lat: 21.4354, lng: 39.3705, name: 'حي القرينية - جدة', link: 'https://jed5.matajeralhai.com/', icon: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png', image: 'url_to_image8' },
+            { lat: 21.5752, lng: 39.2125, name: 'حي السامر - جدة', link: 'https://jed2.matajeralhai.com/', icon: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png', image: 'url_to_image9' },
+            { lat: 25.7605, lng: 45.3943, name: 'حي تمير - الرياض', link: 'https://rydh5.matajeralhai.com/', icon: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png', image: 'url_to_image10' },
+            { lat: 21.6319, lng: 39.1225, name: 'حي النعيم - جدة', link: 'https://jed10.matajeralhai.com/', icon: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png', image: 'url_to_image11' },
+            { lat: 21.6159, lng: 39.1277, name: 'حي المحمدية - جدة', link: 'https://jed10.matajeralhai.com/', icon: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png', image: 'url_to_image12' },
+            { lat: 21.6261, lng: 39.1425, name: 'حي المرجان - جدة', link: 'https://jed10.matajeralhai.com/', icon: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png', image: 'url_to_image13' },
+            { lat: 21.6195, lng: 39.1480, name: 'حي البساتين - جدة', link: 'https://jed10.matajeralhai.com/', icon: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png', image: 'url_to_image14' },
+            { lat: 24.7402, lng: 46.6520, name: 'حي الغدير - الرياض', link: 'https://rydh1.matajeralhai.com/', icon: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png', image: 'url_to_image15' },
+            { lat: 24.7889, lng: 46.7223, name: 'حي الفلاح - الرياض', link: 'https://rydh2.matajeralhai.com/', icon: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png', image: 'url_to_image16' },
+            { lat: 24.7688, lng: 46.7111, name: 'حي الوادي - الرياض', link: 'https://rydh3.matajeralhai.com/', icon: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png', image: 'url_to_image17' },
+            { lat: 24.7725, lng: 46.7087, name: 'حي النفل - الرياض', link: 'https://rydh4.matajeralhai.com/', icon: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png', image: 'url_to_image18' },
+            { lat: 21.5892, lng: 39.1979, name: 'حي الصفا - جدة', link: 'https://jed3.matajeralhai.com/', icon: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png', image: 'url_to_image19' },
+            { lat: 21.3891, lng: 39.8579, name: 'حي الزايدي - مكة', link: 'https://mak2.matajeralhai.com/', icon: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png', image: 'url_to_image20' },
+            { lat: 21.4243, lng: 39.8259, name: 'حي التنعيم - مكة', link: 'https://mak1.matajeralhai.com/', icon: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png', image: 'url_to_image21' },
+            { lat: 21.4878, lng: 39.1843, name: 'حي باب مكة - جدة', link: 'https://jed8.matajeralhai.com/', icon: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png', image: 'url_to_image22' }
+      ];
+
+      function initMap() {
+        // Default map center (initial)
+        const mapCenter = { lat: 21.5600, lng: 39.1700 }; // Central Jeddah
+
+        // Create the map and zoom in (increase zoom value for more zoom)
+        map = new google.maps.Map(document.getElementById('map'), {
+          zoom: 12, // Increase this zoom value to make the map more zoomed in
+          center: mapCenter
+        });
+
+        // Add the markers for each location
+        locations.forEach(location => {
+          const marker = new google.maps.Marker({
+            position: { lat: location.lat, lng: location.lng },
+            map: map,
+            icon: {
+              url: location.icon,
+              scaledSize: new google.maps.Size(50, 50) // Make the marker icon larger (adjust size)
+            }
+          });
+
+          marker.addListener('click', () => {
+            showSidebar(location); // Open sidebar only when a pin is clicked
+          });
+
+          markers.push(marker);  // Store marker for later use
+        });
+
+        // Initialize the search input box
+        const input = document.getElementById("search-input");
+        const searchBox = new google.maps.places.SearchBox(input);
+
+        // Bias the SearchBox results towards the map's viewport.
+        map.addListener('bounds_changed', () => {
+          searchBox.setBounds(map.getBounds());
+        });
+
+        // Listen for the event when the user selects a prediction and retrieve more details for that place.
+        searchBox.addListener("places_changed", () => {
+          const places = searchBox.getPlaces();
+
+          if (places.length == 0) {
+            return;
+          }
+
+          // Clear out the old markers from the search result.
+          markers.forEach(marker => marker.setMap(null));
+
+          // For each place, get the icon, name, and location.
+          const bounds = new google.maps.LatLngBounds();
+          places.forEach(place => {
+            if (!place.geometry || !place.geometry.location) {
+              console.log("Returned place contains no geometry");
+              return;
+            }
+
+            // Create a new marker for the place.
+            const marker = new google.maps.Marker({
+              map: map,
+              title: place.name,
+              position: place.geometry.location
+            });
+
+            markers.push(marker);  // Store the new marker
+
+            // Zoom to the place, but don't open the sidebar
+            if (place.geometry.viewport) {
+              bounds.union(place.geometry.viewport);
+            } else {
+              bounds.extend(place.geometry.location);
+            }
+
+            // Add click event for the newly created marker
+            marker.addListener('click', () => {
+              showSidebar({
+                lat: place.geometry.location.lat(),
+                lng: place.geometry.location.lng(),
+                name: place.name,
+                link: '', // no link from places API
+                image: 'https://via.placeholder.com/300' // Placeholder image for searched places
+              });
+            });
+          });
+
+          // Fit the map to the new bounds (zoom into the search result).
+          map.fitBounds(bounds);
+        });
+      }
+
+      // Function to show the sidebar with the location details
+      function showSidebar(location) {
+        document.getElementById('location-name').textContent = location.name;
+        document.getElementById('location-details').textContent = location.name;
+        document.getElementById('location-link').href = location.link || '#';
+        document.getElementById('location-image').src = location.image || 'https://via.placeholder.com/300';
+
+        // Set WhatsApp share link
+        const shareMessage = `Check out this location: ${location.name} - Coordinates: ${location.lat}, ${location.lng}`;
+        const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareMessage)}`;
+        document.getElementById('share-btn-sidebar').href = whatsappUrl;
+
+        // Show the sidebar
+        document.getElementById('sidebar').style.display = 'block';
+
+        // Adjust the map width
+        document.getElementById('map').style.width = '70%';
+
+        // Trigger a map resize to ensure proper rendering
+        google.maps.event.trigger(map, 'resize');
+      }
+
+      // Function to close the sidebar and reset the map width
+      document.getElementById('close-sidebar').addEventListener('click', function() {
+        document.getElementById('sidebar').style.display = 'none';
+        document.getElementById('map').style.width = '100%';
+
+        // Trigger a map resize to ensure proper rendering
+        google.maps.event.trigger(map, 'resize');
+      });
+    </script>
+  </body>
+</html>
