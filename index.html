@@ -1,110 +1,149 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title> Neighborhood Map</title>
-  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDSQwC16g8ZKoyVC2EpixPr0e-7IcPII14&libraries=places&callback=initMap" async defer></script>
-  <style>
-    body {
-      font-family: 'Arial', sans-serif;
-      margin: 0;
-      padding: 0;
-    }
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neighborhood Map</title>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDSQwC16g8ZKoyVC2EpixPr0e-7IcPII14&libraries=places&callback=initMap" async defer></script>
+    <style>
+      body {
+  font-family: 'Your Website Font', sans-serif;
+}
 
-    #map {
-      height: 100vh;
-      width: 100%;
-    }
+      #map {
+        height: 100vh;
+        width: 100%; /* Default to 100% width */
+        transition: width 0.3s; /* Smooth transition when resizing */
+      }
+      #sidebar {
+        height: 100%;
+        width: 30%;
+        position: fixed;
+        right: 0;
+        top: 0;
+        background-color: #f8f9fa;
+        box-shadow: -2px 0 5px rgba(0, 0, 0, 0.2);
+        padding: 20px;
+        display: none;
+        z-index: 1000;
+        transition: transform 0.3s ease; /* Smooth transition for sidebar */
+      }
+      .share{
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 10px;
+        position: absolute;
+        top: 32px;
+        left: 10px;
+      }
+      #sidebar h3 {
+        margin-top: 0;
+      }
+      #close-sidebar {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background-color: #d9534f;
+        color: white;
+        border: none;
+        padding: 5px 10px;
+        cursor: pointer;
+        border-radius: 5px;
+      }
+      #search-input {
+        width: 300px;
+        height: 30px;
+        margin-right: 10px;
+        padding: 5px;
+        font-size: 16px;
+        margin-top: 35px;
+        background-color: #f8f9fa;
+        z-index: 999999999999999999999;
+      }
+      .whatsapp-share-btn {
+        display: inline-block;
+        background-color: #25D366;
+        color: white;
+        padding: 13px 15px;
+        font-size: 16px;
+        text-decoration: none;
+        border-radius: 5px;
+        margin-top: 35px;
+      }
+      .whatsapp-share-btn:hover {
+        background-color: #20b858;
+      }
+      .info-header{
+        font-size: 25px;
+        margin-bottom: 10px;
+      }
+      .info-content {
+        font-size: 17px;
+        padding: 10px;
+      }
+      .whatsapp-share-btn{
+     z-index: 99999;
+     margin-left: 50px;
+      }
+      @media (max-width: 545px){
+        .share{
+          display: flex;
+          flex-direction: column;
+          width: fit-content;
+        }
+        .whatsapp-share-btn {
+          margin: 10px 0px 0px px;
+        }
 
-    #sidebar {
-      height: 100%;
-      width: 300px;
-      position: fixed;
-      right: 0;
-      top: 0;
-      background-color: rgba(255, 255, 255, 0.9);
-      box-shadow: -2px 0 5px rgba(0, 0, 0, 0.2);
-      padding: 20px;
-      display: none;
-      z-index: 1000;
-      overflow-y: auto;
-    }
 
-    #sidebar h3 {
-      font-size: 24px;
-      margin-top: 0;
-    }
+      }
+      
+      @media (max-width: 768px) {
+  #sidebar {
+    width: 100%; /* Full width on mobile */
+  }
+  #map {
+    height: 60vh; /* Adjust map height on smaller screens */
+  }
+  .whatsapp-share-btn {
+    font-size: 14px; /* Adjust button size */
+  }
+}
 
-    #sidebar p {
-      margin: 0;
-      font-size: 16px;
-    }
+    </style>
+  </head>
+  <body>
 
-    #close-sidebar {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      background-color: #d9534f;
-      color: white;
-      border: none;
-      padding: 5px 10px;
-      cursor: pointer;
-      border-radius: 5px;
-    }
+    <!-- Search input and WhatsApp button container -->
+    <div id="controls" class="share">
+      <input id="search-input" type="text" placeholder="Search " />
+      <a id="share-btn-sidebar" href="#" target="_blank" class="whatsapp-share-btn">Share on WhatsApp</a>
+    </div>
 
-    #search-input {
-      position: absolute;
-      top: 20px;
-      left: 20px;
-      width: 300px;
-      padding: 10px;
-      font-size: 16px;
-      z-index: 1000;
-    }
+    <!-- Div to display the map -->
+    <div id="map"></div>
 
-    .whatsapp-share-btn {
-      display: inline-block;
-      background-color: #25D366;
-      color: white;
-      padding: 10px;
-      font-size: 16px;
-      text-decoration: none;
-      border-radius: 5px;
-      margin-top: 20px;
-    }
+    <!-- Sidebar to show location details -->
+    <div id="sidebar">
+      <button id="close-sidebar">X</button>
+      <h3 id="location-name" class="info-header"></h3>
+      <div class="info-content">
+        <p><strong>Location:</strong> <span id="location-details"></span></p>
+        <a id="location-link" href="https://jed6.matajeralhai.com/" target="_blank">Visit website</a>
+        <br><br>
 
-    .whatsapp-share-btn:hover {
-      background-color: #20b858;
-    }
 
-    #location-image {
-      width: 100%;
-      height: auto;
-      border-radius: 5px;
-      margin-top: 10px;
-    }
-  </style>
-</head>
-<body>
+        <img id="location-image" src="" alt="Location image" style="width:100%; height:auto;">
+      </div>
+    </div>
 
-  <input id="search-input" type="text" placeholder="Search locations...">
-  <div id="map"></div>
+    <script>
+      let map, searchBox ,highlightPolygon , highlightCircle;
+      let markers = [];  // Array to hold all markers
+      let currentLocation; // Store the current location to share on WhatsApp
 
-  <div id="sidebar">
-    <button id="close-sidebar">X</button>
-    <h3 id="location-name"></h3>
-    <p><strong>Location:</strong> <span id="location-details"></span></p>
-    <a id="location-link" href="#" target="_blank">Visit website</a>
-    <img id="location-image" src="" alt="Location image">
-    <a id="share-btn-sidebar" href="#" target="_blank" class="whatsapp-share-btn">Share on WhatsApp</a>
-  </div>
-
-  <script>
-    let map, searchBox;
-    let markers = [];
-    
-    const locations = [
+      // Array of locations to display on the map
+      const locations = [
       { lat: 21.2854, lng: 39.2376, name: 'حي السنابل - جدة', link: 'https://jed1.matajeralhai.com/', icon: 'https://maps.google.com/mapfiles/ms/icons/orange-dot.png', image: 'https://jed1.matajeralhai.com/Images/Photos/63f719b49e404dbb9a7217ded02fef23.webp' },
             { lat: 21.2854, lng: 39.2376, name: 'حي الأجاويد - جدة', link: 'https://jed1.matajeralhai.com/', icon: 'https://maps.google.com/mapfiles/ms/icons/orange-dot.png', image: 'url_to_image2' },
             { lat: 21.5433, lng: 39.1728, name: 'حي الرياض - جدة', link: 'https://jed6.matajeralhai.com/', icon: 'https://maps.google.com/mapfiles/ms/icons/orange-dot.png', image: 'url_to_image3' },
@@ -128,96 +167,118 @@
             { lat: 21.4243, lng: 39.8259, name: 'حي التنعيم - مكة', link: 'https://mak1.matajeralhai.com/', icon: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png', image: 'url_to_image21' },
             { lat: 21.4878, lng: 39.1843, name: 'حي باب مكة - جدة', link: 'https://jed8.matajeralhai.com/', icon: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png', image: 'url_to_image22' }
       ];
-
-    function initMap() {
-      const mapCenter = { lat: 21.5600, lng: 39.1700 };
-
-      map = new google.maps.Map(document.getElementById('map'), {
-        zoom: 9, // Closer zoom for more detail
-        center: mapCenter,
-        mapTypeId: 'satellite', // Satellite view for realism
-        fullscreenControl: true, // Fullscreen control for better immersion
-        zoomControl: true, // Zoom control
-        streetViewControl: false // Disabling street view for cleaner UI
-      });
-
-      locations.forEach(location => {
-        const marker = new google.maps.Marker({
-          position: { lat: location.lat, lng: location.lng },
-          map: map,
-          icon: location.icon // Using default Google Maps pin icons
+      function initMap() {
+        const mapCenter = { lat: 21.5600, lng: 39.1700 };
+        
+        // إعداد الخريطة لتكون على وضع الساتلايت دون تخصيص الأنماط
+        map = new google.maps.Map(document.getElementById('map'), {
+          zoom: 11,
+          center: mapCenter,
+          mapTypeId: google.maps.MapTypeId.HYBRID // العرض الافتراضي "Hybrid" ليعرض تسميات مع الساتلايت
         });
 
-        marker.addListener('click', () => {
-          showSidebar(location);
-        });
-
-        markers.push(marker);
-      });
-
-      const input = document.getElementById("search-input");
-      const searchBox = new google.maps.places.SearchBox(input);
-
-      map.addListener('bounds_changed', () => {
-        searchBox.setBounds(map.getBounds());
-      });
-
-      searchBox.addListener("places_changed", () => {
-        const places = searchBox.getPlaces();
-
-        if (places.length === 0) return;
-
-        markers.forEach(marker => marker.setMap(null));
-
-        const bounds = new google.maps.LatLngBounds();
-        places.forEach(place => {
-          if (!place.geometry || !place.geometry.location) return;
-
+        locations.forEach(location => {
           const marker = new google.maps.Marker({
+            position: { lat: location.lat, lng: location.lng },
             map: map,
-            title: place.name,
-            position: place.geometry.location
+            icon: {
+              url: location.icon,
+              scaledSize: new google.maps.Size(50, 50)
+            }
+          });
+
+          marker.addListener('click', () => {
+            showSidebar(location);
           });
 
           markers.push(marker);
-
-          bounds.union(place.geometry.viewport || place.geometry.location);
-
-          marker.addListener('click', () => {
-            showSidebar({
-              lat: place.geometry.location.lat(),
-              lng: place.geometry.location.lng(),
-              name: place.name,
-              link: '', // No link from Google Places
-              image: 'https://via.placeholder.com/300' // Placeholder image for search results
-            });
-          });
         });
 
-        map.fitBounds(bounds);
-      });
-    }
+        const input = document.getElementById("search-input");
+        searchBox = new google.maps.places.SearchBox(input);
 
-    function showSidebar(location) {
-      document.getElementById('location-name').textContent = location.name;
-      document.getElementById('location-details').textContent = `${location.lat}, ${location.lng}`;
-      document.getElementById('location-link').href = location.link || '#';
-      document.getElementById('location-image').src = location.image || 'https://via.placeholder.com/300';
+        map.addListener('bounds_changed', () => {
+          searchBox.setBounds(map.getBounds());
+        });
+        searchBox.addListener("places_changed", () => {
+    const places = searchBox.getPlaces();
+    if (places.length === 0) return;
 
-      const shareMessage = `Check out this location: ${location.name} - Coordinates: ${location.lat}, ${location.lng}`;
-      const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareMessage)}`;
-      document.getElementById('share-btn-sidebar').href = whatsappUrl;
+    if (highlightCircle) highlightCircle.setMap(null);
+    markers.forEach(marker => marker.setMap(null));
 
-      document.getElementById('sidebar').style.display = 'block';
-      document.getElementById('map').style.width = 'calc(100% - 300px)';
-      google.maps.event.trigger(map, 'resize');
-    }
+    const bounds = new google.maps.LatLngBounds();
+    const infoWindow = new google.maps.InfoWindow(); // نافذة المعلومات
 
-    document.getElementById('close-sidebar').addEventListener('click', function() {
-      document.getElementById('sidebar').style.display = 'none';
-      document.getElementById('map').style.width = '100%';
-      google.maps.event.trigger(map, 'resize');
+    places.forEach(place => {
+        if (!place.geometry || !place.geometry.location) return;
+
+        const marker = new google.maps.Marker({
+            map: map,
+            title: place.name,
+            position: place.geometry.location
+        });
+        markers.push(marker);
+
+        const location = place.geometry.location;
+
+        // رسم دائرة حول الموقع
+        highlightCircle = new google.maps.Circle({
+            strokeColor: "#FF0000",
+            strokeOpacity: 0.8,
+            strokeWeight: 2,
+            fillColor: "#FF0000",
+            fillOpacity: 0,
+            map: map,
+            center: location,
+            radius: 500
+        });
+
+        bounds.extend(location);
+
+        // إظهار نافذة منبثقة عند تمرير المؤشر فوق العلامة
+        marker.addListener('mouseover', () => {
+            infoWindow.setContent(place.name);
+            infoWindow.open(map, marker);
+        });
+
+        // إخفاء النافذة عند إبعاد المؤشر
+        marker.addListener('mouseout', () => {
+            infoWindow.close();
+        });
     });
-  </script>
-</body>
+
+    // ضبط الحدود
+    map.fitBounds(bounds);
+
+    // استخدام تأخير قصير لتغيير التكبير
+    setTimeout(() => {
+        map.setZoom(16); // تغيير مستوى التكبير هنا حسب ما يناسبك
+    }, 100); // تأخير بسيط لتأكيد تطبيق التكبير بعد ضبط الحدود
+});
+      }
+      function showSidebar(location) {
+        document.getElementById('location-name').textContent = location.name;
+        document.getElementById('location-details').textContent = location.name;
+        document.getElementById('location-link').href = location.link || '#';
+        document.getElementById('location-image').src = location.image || 'https://via.placeholder.com/300';
+
+        const shareMessage = `Check out this location: ${location.name} - Coordinates: ${location.lat}, ${location.lng}`;
+        const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareMessage)}`;
+        document.getElementById('share-btn-sidebar').href = whatsappUrl;
+
+        document.getElementById('sidebar').style.display = 'block';
+        document.getElementById('map').style.width = '70%';
+
+        google.maps.event.trigger(map, 'resize');
+      }
+
+      document.getElementById('close-sidebar').addEventListener('click', function() {
+        document.getElementById('sidebar').style.display = 'none';
+        document.getElementById('map').style.width = '100%';
+
+        google.maps.event.trigger(map, 'resize');
+      });
+    </script>
+  </body>
 </html>
