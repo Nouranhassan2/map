@@ -1,190 +1,231 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Neighborhood Map</title>
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDSQwC16g8ZKoyVC2EpixPr0e-7IcPII14&libraries=places&callback=initMap" async defer></script>
-    <style>
-      body {
-  font-family: 'Your Website Font', sans-serif;
-}
-
-      #map {
-        height: 100vh;
-        width: 100%; /* Default to 100% width */
-        transition: width 0.3s; /* Smooth transition when resizing */
-      }
-      #sidebar {
-        height: 100%;
-        width: 30%;
-        position: fixed;
-        right: 0;
-        top: 0;
-        background-color: #f8f9fa;
-        box-shadow: -2px 0 5px rgba(0, 0, 0, 0.2);
-        padding: 20px;
-        display: none;
-        z-index: 1000;
-        transition: transform 0.3s ease; /* Smooth transition for sidebar */
-      }
-      .share{
+<head>
+  <meta charset="UTF-8">
+  <title>Neighborhood Map</title>
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDSQwC16g8ZKoyVC2EpixPr0e-7IcPII14&libraries=places&callback=initMap" async defer></script>
+  <style>
+    body {
+      font-family: 'Your Website Font', sans-serif;
+    }
+    #map {
+      height: 100vh;
+      width: 100%;
+      transition: width 0.3s;
+    }
+    #sidebar {
+      height: 100%;
+      width: 30%;
+      position: fixed;
+      right: 0;
+      top: 0;
+      background-color: #f8f9fa;
+      box-shadow: -2px 0 5px rgba(0, 0, 0, 0.2);
+      padding: 20px;
+      display: none;
+      z-index: 1000;
+      transition: transform 0.3s ease;
+    }
+    .share {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      position: absolute;
+      top: 32px;
+      left: 10px;
+    }
+    #sidebar h3 {
+      margin-top: 0;
+    }
+    #close-sidebar {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background-color: #d9534f;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+    #search-input {
+      width: 300px;
+      height: 30px;
+      margin-right: 10px;
+      padding: 5px;
+      font-size: 16px;
+      margin-top: 35px;
+      background-color: #f8f9fa;
+      z-index: 999999999999999999999;
+    }
+    #search-button {
+      padding: 5px 10px;
+      font-size: 16px;
+      margin-top: 35px;
+      cursor: pointer;
+    }
+    .whatsapp-share-btn {
+      display: inline-block;
+      background-color: #25D366;
+      color: white;
+      padding: 13px 15px;
+      font-size: 16px;
+      text-decoration: none;
+      border-radius: 5px;
+      margin-top: 35px;
+    }
+    .whatsapp-share-btn:hover {
+      background-color: #20b858;
+    }
+    .info-header {
+      font-size: 25px;
+      margin-bottom: 10px;
+    }
+    .info-content {
+      font-size: 17px;
+      padding: 10px;
+    }
+    .whatsapp-share-btn {
+      z-index: 99999;
+      margin-left: 50px;
+    }
+    @media (max-width: 545px) {
+      .share {
         display: flex;
-        justify-content: space-between;
-        margin-bottom: 10px;
-        position: absolute;
-        top: 32px;
-        left: 10px;
-      }
-      #sidebar h3 {
-        margin-top: 0;
-      }
-      #close-sidebar {
-        position: absolute;
-        top: 10px;
-        right: 10px;
-        background-color: #d9534f;
-        color: white;
-        border: none;
-        padding: 5px 10px;
-        cursor: pointer;
-        border-radius: 5px;
-      }
-      #search-input {
-        width: 300px;
-        height: 30px;
-        margin-right: 10px;
-        padding: 5px;
-        font-size: 16px;
-        margin-top: 35px;
-        background-color: #f8f9fa;
-        z-index: 999999999999999999999;
+        flex-direction: column;
+        width: fit-content;
       }
       .whatsapp-share-btn {
-        display: inline-block;
-        background-color: #25D366;
-        color: white;
-        padding: 13px 15px;
-        font-size: 16px;
-        text-decoration: none;
-        border-radius: 5px;
-        margin-top: 35px;
+        margin: 10px 0px 0px px;
       }
-      .whatsapp-share-btn:hover {
-        background-color: #20b858;
+    }
+    @media (max-width: 768px) {
+      #sidebar {
+        width: 100%;
       }
-      .info-header{
-        font-size: 25px;
-        margin-bottom: 10px;
+      #map {
+        height: 60vh;
       }
-      .info-content {
-        font-size: 17px;
-        padding: 10px;
+      .whatsapp-share-btn {
+        font-size: 14px;
       }
-      .whatsapp-share-btn{
-     z-index: 99999;
-     margin-left: 50px;
-      }
-      @media (max-width: 545px){
-        .share{
-          display: flex;
-          flex-direction: column;
-          width: fit-content;
-        }
-        .whatsapp-share-btn {
-          margin: 10px 0px 0px px;
-        }
+    }
+  </style>
+</head>
+<body>
 
+  <!-- Search input and WhatsApp button container -->
+  <div id="controls" class="share">
+    <input id="search-input" type="text" placeholder="Search " />
+    <button id="search-button">Search</button>
+    <a id="share-btn-sidebar" href="#" target="_blank" class="whatsapp-share-btn">Share on WhatsApp</a>
+  </div>
 
-      }
-      
-      @media (max-width: 768px) {
-  #sidebar {
-    width: 100%; /* Full width on mobile */
-  }
-  #map {
-    height: 60vh; /* Adjust map height on smaller screens */
-  }
-  .whatsapp-share-btn {
-    font-size: 14px; /* Adjust button size */
-  }
-}
+  <!-- Div to display the map -->
+  <div id="map"></div>
 
-    </style>
-  </head>
-  <body>
-
-    <!-- Search input and WhatsApp button container -->
-    <div id="controls" class="share">
-      <input id="search-input" type="text" placeholder="Search " />
-      <a id="share-btn-sidebar" href="#" target="_blank" class="whatsapp-share-btn">Share on WhatsApp</a>
+  <!-- Sidebar to show location details -->
+  <div id="sidebar">
+    <button id="close-sidebar">X</button>
+    <h3 id="location-name" class="info-header"></h3>
+    <div class="info-content">
+      <p><strong>Location:</strong> <span id="location-details"></span></p>
+      <a id="location-link" href="#" target="_blank">Visit website</a>
+      <br><br>
+      <img id="location-image" src="" alt="Location image" style="width:100%; height:auto;">
     </div>
+  </div>
 
-    <!-- Div to display the map -->
-    <div id="map"></div>
+  <script>
+    let map, highlightCircle;
+    let markers = [];
+    const locations = [
+      { lat: 21.2854, lng: 39.2376, name: 'حي السنابل - جدة', link: 'https://jed1.matajeralhai.com/', image: 'https://jed1.matajeralhai.com/Images/Photos/63f719b49e404dbb9a7217ded02fef23.webp' },
+      { lat: 21.2854, lng: 39.2376, name: 'حي الأجاويد - جدة', link: 'https://jed1.matajeralhai.com/', image: '' },
+      { lat: 21.5433, lng: 39.1728, name: 'حي الرياض - جدة', link: 'https://jed6.matajeralhai.com/', icon: '', image: '' },
+      { lat: 21.5433, lng: 39.1728, name: 'حي طيبة - جدة', link: 'https://jed6.matajeralhai.com/', icon: '', image: '' },
+      { lat: 21.6682, lng: 39.1091, name: 'حي أبحر - جدة', link: 'https://jed6.matajeralhai.com/', icon: '', image: '' },
+      { lat: 21.5454, lng: 39.2049, name: 'حي الحمدانية - جدة', link: 'https://jed4.matajeralhai.com/', icon: '', image: '' },
+      { lat: 21.5027, lng: 39.2433, name: 'حي الفضيلة - جدة', link: 'https://jed5.matajeralhai.com/', icon: '', image: '' },
+      { lat: 21.4354, lng: 39.3705, name: 'حي القرينية - جدة', link: 'https://jed5.matajeralhai.com/', icon: '', image: '' },
+      { lat: 21.5752, lng: 39.2125, name: 'حي السامر - جدة', link: 'https://jed2.matajeralhai.com/', icon: '', image: '' },
+      { lat: 25.7605, lng: 45.3943, name: 'حي تمير - الرياض', link: 'https://rydh5.matajeralhai.com/', icon: '', image: '' },
+      { lat: 21.6319, lng: 39.1225, name: 'حي النعيم - جدة', link: 'https://jed10.matajeralhai.com/', icon: '', image: '' },
+      { lat: 21.6159, lng: 39.1277, name: 'حي المحمدية - جدة', link: 'https://jed10.matajeralhai.com/', icon: '', image: '' },
+      { lat: 21.6261, lng: 39.1425, name: 'حي المرجان - جدة', link: 'https://jed10.matajeralhai.com/', icon: '', image: '' },
+      { lat: 21.6195, lng: 39.1480, name: 'حي البساتين - جدة', link: 'https://jed10.matajeralhai.com/', icon: '', image: '' },
+      { lat: 24.7402, lng: 46.6520, name: 'حي الغدير - الرياض', link: 'https://rydh1.matajeralhai.com/', icon: '', image: '' },
+      { lat: 24.7889, lng: 46.7223, name: 'حي الفلاح - الرياض', link: 'https://rydh2.matajeralhai.com/', icon: '', image: '' },
+      { lat: 24.7688, lng: 46.7111, name: 'حي الوادي - الرياض', link: 'https://rydh3.matajeralhai.com/', icon: '', image: '' },
+      { lat: 24.7725, lng: 46.7087, name: 'حي النفل - الرياض', link: 'https://rydh4.matajeralhai.com/', icon: '', image: '' },
+      { lat: 21.5892, lng: 39.1979, name: 'حي الصفا - جدة', link: 'https://jed3.matajeralhai.com/', icon: '', image: '' },
+      { lat: 21.3891, lng: 39.8579, name: 'حي الزايدي - مكة', link: 'https://mak2.matajeralhai.com/', icon: '', image: '' },
+      { lat: 21.4243, lng: 39.8259, name: 'حي التنعيم - مكة', link: 'https://mak1.matajeralhai.com/', icon: '', image: '' },
+      { lat: 21.4878, lng: 39.1843, name: 'باب مكة - جدة', link: 'https://jed8.matajeralhai.com/', icon: '', image: '' }
+    ];
 
-    <!-- Sidebar to show location details -->
-    <div id="sidebar">
-      <button id="close-sidebar">X</button>
-      <h3 id="location-name" class="info-header"></h3>
-      <div class="info-content">
-        <p><strong>Location:</strong> <span id="location-details"></span></p>
-        <a id="location-link" href="https://jed6.matajeralhai.com/" target="_blank">Visit website</a>
-        <br><br>
+    function initMap() {
+      const mapCenter = { lat: 21.5600, lng: 39.1700 };
+      map = new google.maps.Map(document.getElementById('map'), {
+        zoom: 11,
+        center: mapCenter,
+        mapTypeId: google.maps.MapTypeId.HYBRID
+      });
 
-
-        <img id="location-image" src="" alt="Location image" style="width:100%; height:auto;">
-      </div>
-    </div>
-
-    <script>
-      let map, searchBox ,highlightPolygon , highlightCircle;
-      let markers = [];  // Array to hold all markers
-      let currentLocation; // Store the current location to share on WhatsApp
-
-      // Array of locations to display on the map
-      const locations = [
-      { lat: 21.2854, lng: 39.2376, name: 'حي السنابل - جدة', link: 'https://jed1.matajeralhai.com/', icon: 'https://maps.google.com/mapfiles/ms/icons/orange-dot.png', image: 'https://jed1.matajeralhai.com/Images/Photos/63f719b49e404dbb9a7217ded02fef23.webp' },
-            { lat: 21.2854, lng: 39.2376, name: 'حي الأجاويد - جدة', link: 'https://jed1.matajeralhai.com/', icon: 'https://maps.google.com/mapfiles/ms/icons/orange-dot.png', image: 'url_to_image2' },
-            { lat: 21.5433, lng: 39.1728, name: 'حي الرياض - جدة', link: 'https://jed6.matajeralhai.com/', icon: 'https://maps.google.com/mapfiles/ms/icons/orange-dot.png', image: 'url_to_image3' },
-            { lat: 21.5433, lng: 39.1728, name: 'حي طيبة - جدة', link: 'https://jed6.matajeralhai.com/', icon: 'https://maps.google.com/mapfiles/ms/icons/orange-dot.png', image: 'url_to_image4' },
-            { lat: 21.6682, lng: 39.1091, name: 'حي أبحر - جدة', link: 'https://jed6.matajeralhai.com/', icon: 'https://maps.google.com/mapfiles/ms/icons/orange-dot.png', image: 'url_to_image5' },
-            { lat: 21.5454, lng: 39.2049, name: 'حي الحمدانية - جدة', link: 'https://jed4.matajeralhai.com/', icon: 'https://maps.google.com/mapfiles/ms/icons/orange-dot.png', image: 'url_to_image6' },
-            { lat: 21.5027, lng: 39.2433, name: 'حي الفضيلة - جدة', link: 'https://jed5.matajeralhai.com/', icon: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png', image: 'url_to_image7' },
-            { lat: 21.4354, lng: 39.3705, name: 'حي القرينية - جدة', link: 'https://jed5.matajeralhai.com/', icon: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png', image: 'url_to_image8' },
-            { lat: 21.5752, lng: 39.2125, name: 'حي السامر - جدة', link: 'https://jed2.matajeralhai.com/', icon: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png', image: 'url_to_image9' },
-            { lat: 25.7605, lng: 45.3943, name: 'حي تمير - الرياض', link: 'https://rydh5.matajeralhai.com/', icon: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png', image: 'url_to_image10' },
-            { lat: 21.6319, lng: 39.1225, name: 'حي النعيم - جدة', link: 'https://jed10.matajeralhai.com/', icon: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png', image: 'url_to_image11' },
-            { lat: 21.6159, lng: 39.1277, name: 'حي المحمدية - جدة', link: 'https://jed10.matajeralhai.com/', icon: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png', image: 'url_to_image12' },
-            { lat: 21.6261, lng: 39.1425, name: 'حي المرجان - جدة', link: 'https://jed10.matajeralhai.com/', icon: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png', image: 'url_to_image13' },
-            { lat: 21.6195, lng: 39.1480, name: 'حي البساتين - جدة', link: 'https://jed10.matajeralhai.com/', icon: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png', image: 'url_to_image14' },
-            { lat: 24.7402, lng: 46.6520, name: 'حي الغدير - الرياض', link: 'https://rydh1.matajeralhai.com/', icon: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png', image: 'url_to_image15' },
-            { lat: 24.7889, lng: 46.7223, name: 'حي الفلاح - الرياض', link: 'https://rydh2.matajeralhai.com/', icon: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png', image: 'url_to_image16' },
-            { lat: 24.7688, lng: 46.7111, name: 'حي الوادي - الرياض', link: 'https://rydh3.matajeralhai.com/', icon: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png', image: 'url_to_image17' },
-            { lat: 24.7725, lng: 46.7087, name: 'حي النفل - الرياض', link: 'https://rydh4.matajeralhai.com/', icon: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png', image: 'url_to_image18' },
-            { lat: 21.5892, lng: 39.1979, name: 'حي الصفا - جدة', link: 'https://jed3.matajeralhai.com/', icon: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png', image: 'url_to_image19' },
-            { lat: 21.3891, lng: 39.8579, name: 'حي الزايدي - مكة', link: 'https://mak2.matajeralhai.com/', icon: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png', image: 'url_to_image20' },
-            { lat: 21.4243, lng: 39.8259, name: 'حي التنعيم - مكة', link: 'https://mak1.matajeralhai.com/', icon: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png', image: 'url_to_image21' },
-            { lat: 21.4878, lng: 39.1843, name: 'حي باب مكة - جدة', link: 'https://jed8.matajeralhai.com/', icon: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png', image: 'url_to_image22' }
-      ];
-      function initMap() {
-        const mapCenter = { lat: 21.5600, lng: 39.1700 };
-        
-        // إعداد الخريطة لتكون على وضع الساتلايت دون تخصيص الأنماط
-        map = new google.maps.Map(document.getElementById('map'), {
-          zoom: 11,
-          center: mapCenter,
-          mapTypeId: google.maps.MapTypeId.HYBRID // العرض الافتراضي "Hybrid" ليعرض تسميات مع الساتلايت
+      // Create markers
+      locations.forEach(location => {
+        const marker = new google.maps.Marker({
+          position: { lat: location.lat, lng: location.lng },
+          map: map,
+          icon: {
+            url: './pin.png',
+            scaledSize: new google.maps.Size(50, 40)
+          }
         });
 
-        locations.forEach(location => {
+        marker.addListener('click', () => {
+          showSidebar(location);
+        });
+
+        markers.push(marker);
+      });
+    }
+
+    function performSearch() {
+      const inputText = document.getElementById("search-input").value.toLowerCase().trim();
+      if (inputText === "") {
+        alert("يرجى إدخال اسم الحي.");
+        return;
+      }
+      let foundLocations = [];
+      locations.forEach(location => {
+        if (location.name.toLowerCase().includes(inputText)) {
+          foundLocations.push(location);
+        }
+      });
+
+      // Clear existing markers
+      markers.forEach(marker => marker.setMap(null));
+      markers = [];
+
+      // Clear existing circle
+      if (highlightCircle) {
+        highlightCircle.setMap(null);
+      }
+
+      if (foundLocations.length === 0) {
+        alert("لا توجد نتائج مطابقة. يرجى إدخال اسم حي صحيح.");
+      } else {
+        const bounds = new google.maps.LatLngBounds();
+        foundLocations.forEach(location => {
           const marker = new google.maps.Marker({
             position: { lat: location.lat, lng: location.lng },
             map: map,
             icon: {
-              url: location.icon,
-              scaledSize: new google.maps.Size(50, 50)
-            }
+              url: './pin.png',
+              scaledSize: new google.maps.Size(50, 40)
+            },
+            title: location.name
           });
 
           marker.addListener('click', () => {
@@ -192,93 +233,65 @@
           });
 
           markers.push(marker);
+          bounds.extend(marker.position);
         });
+        map.fitBounds(bounds);
+        if (foundLocations.length === 1) {
+          map.setZoom(16);
 
-        const input = document.getElementById("search-input");
-        searchBox = new google.maps.places.SearchBox(input);
-
-        map.addListener('bounds_changed', () => {
-          searchBox.setBounds(map.getBounds());
-        });
-        searchBox.addListener("places_changed", () => {
-    const places = searchBox.getPlaces();
-    if (places.length === 0) return;
-
-    if (highlightCircle) highlightCircle.setMap(null);
-    markers.forEach(marker => marker.setMap(null));
-
-    const bounds = new google.maps.LatLngBounds();
-    const infoWindow = new google.maps.InfoWindow(); // نافذة المعلومات
-
-    places.forEach(place => {
-        if (!place.geometry || !place.geometry.location) return;
-
-        const marker = new google.maps.Marker({
-            map: map,
-            title: place.name,
-            position: place.geometry.location
-        });
-        markers.push(marker);
-
-        const location = place.geometry.location;
-
-        // رسم دائرة حول الموقع
-        highlightCircle = new google.maps.Circle({
+          // Draw circle around the found location
+          highlightCircle = new google.maps.Circle({
             strokeColor: "#FF0000",
             strokeOpacity: 0.8,
             strokeWeight: 2,
             fillColor: "#FF0000",
             fillOpacity: 0,
             map: map,
-            center: location,
+            center: { lat: foundLocations[0].lat, lng: foundLocations[0].lng },
             radius: 500
-        });
+          });
 
-        bounds.extend(location);
+          // Show sidebar for the found location
+          showSidebar(foundLocations[0]);
+        }
+      }
+    }
 
-        // إظهار نافذة منبثقة عند تمرير المؤشر فوق العلامة
-        marker.addListener('mouseover', () => {
-            infoWindow.setContent(place.name);
-            infoWindow.open(map, marker);
-        });
+    function showSidebar(location) {
+      document.getElementById('location-name').textContent = location.name;
+      document.getElementById('location-details').textContent = location.name;
+      document.getElementById('location-link').href = location.link || '#';
+      document.getElementById('location-image').src = location.image || 'https://via.placeholder.com/300';
 
-        // إخفاء النافذة عند إبعاد المؤشر
-        marker.addListener('mouseout', () => {
-            infoWindow.close();
-        });
+      const shareMessage = `Check out this location: ${location.name} - Coordinates: ${location.lat}, ${location.lng}`;
+      const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareMessage)}`;
+      document.getElementById('share-btn-sidebar').href = whatsappUrl;
+
+      document.getElementById('sidebar').style.display = 'block';
+      document.getElementById('map').style.width = '70%';
+
+      google.maps.event.trigger(map, 'resize');
+    }
+
+    document.getElementById('close-sidebar').addEventListener('click', function() {
+      document.getElementById('sidebar').style.display = 'none';
+      document.getElementById('map').style.width = '100%';
+
+      google.maps.event.trigger(map, 'resize');
     });
 
-    // ضبط الحدود
-    map.fitBounds(bounds);
+    document.getElementById('search-button').addEventListener('click', function() {
+      performSearch();
+    });
 
-    // استخدام تأخير قصير لتغيير التكبير
-    setTimeout(() => {
-        map.setZoom(16); // تغيير مستوى التكبير هنا حسب ما يناسبك
-    }, 100); // تأخير بسيط لتأكيد تطبيق التكبير بعد ضبط الحدود
-});
+    document.getElementById('search-input').addEventListener('keyup', function(event) {
+      if (event.keyCode === 13) {
+        performSearch();
       }
-      function showSidebar(location) {
-        document.getElementById('location-name').textContent = location.name;
-        document.getElementById('location-details').textContent = location.name;
-        document.getElementById('location-link').href = location.link || '#';
-        document.getElementById('location-image').src = location.image || 'https://via.placeholder.com/300';
+    });
 
-        const shareMessage = `Check out this location: ${location.name} - Coordinates: ${location.lat}, ${location.lng}`;
-        const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareMessage)}`;
-        document.getElementById('share-btn-sidebar').href = whatsappUrl;
-
-        document.getElementById('sidebar').style.display = 'block';
-        document.getElementById('map').style.width = '70%';
-
-        google.maps.event.trigger(map, 'resize');
-      }
-
-      document.getElementById('close-sidebar').addEventListener('click', function() {
-        document.getElementById('sidebar').style.display = 'none';
-        document.getElementById('map').style.width = '100%';
-
-        google.maps.event.trigger(map, 'resize');
-      });
-    </script>
-  </body>
+    // Initialize the map
+    window.onload = initMap;
+  </script>
+</body>
 </html>
